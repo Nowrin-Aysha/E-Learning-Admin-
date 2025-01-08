@@ -1,18 +1,11 @@
 import { useContext, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button, Card, CardContent, Typography, Box, Tabs, Tab, Snackbar } from "@mui/material";
 import CourseCurriculum from "../courses/course-curriculum";
 import CourseLanding from "../courses/course-landing";
 import CourseSettings from "../courses/course-settings";
-import {
-  addNewCourseService,
-  fetchInstructorCourseDetailsService,
-  updateCourseByIdService,
-} from "../../helper/helper";
-import {
-  courseCurriculumInitialFormData,
-  courseLandingInitialFormData,
-} from "../config";
+import { addNewCourseService, fetchInstructorCourseDetailsService, updateCourseByIdService } from "../../helper/helper";
+import { courseCurriculumInitialFormData, courseLandingInitialFormData } from "../config";
 import { InstructorContext } from "../context";
 import { AuthContext } from "../authContext";
 
@@ -29,6 +22,8 @@ function AddNewCoursePage() {
   const { auth } = useContext(AuthContext);
   const navigate = useNavigate();
   const params = useParams();
+  const location = useLocation();
+  const mode = new URLSearchParams(location.search).get("mode");
 
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
@@ -43,6 +38,8 @@ function AddNewCoursePage() {
   }
 
   function validateFormData() {
+    if (mode === "view") return true; // No validation required for view mode
+
     for (const key in courseLandingFormData) {
       if (isEmpty(courseLandingFormData[key])) {
         return false;
@@ -52,11 +49,7 @@ function AddNewCoursePage() {
     let hasFreePreview = false;
 
     for (const item of courseCurriculumFormData) {
-      if (
-        isEmpty(item.title) ||
-        isEmpty(item.videoUrl) ||
-        isEmpty(item.public_id)
-      ) {
+      if (isEmpty(item.title) || isEmpty(item.videoUrl) || isEmpty(item.public_id)) {
         return false;
       }
 
@@ -125,7 +118,7 @@ function AddNewCoursePage() {
     } else {
       setCourseLandingFormData(courseLandingInitialFormData);
       setCourseCurriculumFormData(courseCurriculumInitialFormData);
-      setCurrentEditedCourseId(null); 
+      setCurrentEditedCourseId(null);
     }
   }, [params?.courseId]);
 
@@ -139,21 +132,23 @@ function AddNewCoursePage() {
     <Box sx={{ padding: 4 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
         <Typography variant="h4" fontWeight="bold">
-          {currentEditedCourseId ? "Edit Course" : "Create New Course"}
+          {currentEditedCourseId ? (mode === "edit" ? "Edit Course" : "View Course") : "Create New Course"}
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          disabled={!validateFormData() || loading}
-          onClick={handleCreateCourse}
-          sx={{
-            backgroundColor: "#001F3F",
-            color: "white",
-            "&:hover": { backgroundColor: "#001A36" },
-          }}
-        >
-          {loading ? "Submitting..." : "Submit"}
-        </Button>
+        {mode !== "view" && (
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={!validateFormData() || loading}
+            onClick={handleCreateCourse}
+            sx={{
+              backgroundColor: "#001F3F",
+              color: "white",
+              "&:hover": { backgroundColor: "#001A36" },
+            }}
+          >
+            {loading ? "Submitting..." : "Submit"}
+          </Button>
+        )}
       </Box>
 
       <Card>
@@ -175,15 +170,17 @@ function AddNewCoursePage() {
               <CourseCurriculum
                 formData={courseCurriculumFormData}
                 setFormData={setCourseCurriculumFormData}
+                readOnly={mode === "view"}
               />
             )}
             {activeTab === 1 && (
               <CourseLanding
                 formData={courseLandingFormData}
                 setFormData={setCourseLandingFormData}
+                readOnly={mode === "view"}
               />
             )}
-            {activeTab === 2 && <CourseSettings />}
+            {activeTab === 2 && <CourseSettings readOnly={mode === "view"} />}
           </Box>
         </CardContent>
       </Card>
