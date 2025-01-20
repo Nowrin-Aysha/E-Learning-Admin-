@@ -38,13 +38,21 @@ const adminSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  isBlocked:{
+  isBlocked: {
     type: Boolean,
     default: false,
   },
   joinedDate: {
     type: Date,
     default: Date.now,
+  },
+  emailVerified: {
+    type: Boolean,
+    default: false, // Track whether the email is verified
+  },
+  verificationToken: {
+    type: String,  // Token for email verification
+    default: null,
   },
 }, { timestamps: true });
 

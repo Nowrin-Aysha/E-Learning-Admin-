@@ -1,72 +1,140 @@
+import nodemailer from 'nodemailer';
 import mentorModel from "../model/mentorModel.js";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
-// import { response } from "express";
 import Jwt from "jsonwebtoken";
-// import multer from 'multer';
+import { randomInt } from 'crypto';
 
 dotenv.config();
 
-export async function registerMentor(req, res) {
-  try {
-    const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^[0-9]{10}$/;
+// Set up Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER, // Your email (e.g., 'youremail@gmail.com')
+    pass: process.env.EMAIL_PASS, // Your email password or App-specific password
+  },
+});
 
-    const { email, name, phone, password } = req.body;
+// Generate OTP
+const generateOTP = () => {
+  return randomInt(100000, 999999).toString(); // Generates a random 6-digit OTP
+};
 
-    if (!email) return res.status(400).send({ error: "Please enter email" });
-    if (!emailRegex.test(email))
-      return res.status(400).send({ error: "Please enter a valid email" });
-    if (!name) return res.status(400).send({ error: "Please enter name" });
-    if (!phone)
-      return res.status(400).send({ error: "Please enter phone number" });
-    if (!phoneRegex.test(phone))
-      return res.status(400).send({ error: "Phone number must be 10 digits" });
-    if (!password)
-      return res.status(400).send({ error: "Password is required" });
+// Send Registration Email
+const sendRegistrationEmail = (mentorEmail, mentorName) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: mentorEmail,
+    subject: 'Welcome to the Mentor Program!',
+    text: `Hello ${mentorName},\n\nThank you for registering as a mentor! We are excited to have you onboard.\n\nBest regards,\nMentor Program Team`,
+    html: `<p>Hello ${mentorName},</p><p>Thank you for registering as a mentor! We are excited to have you onboard.</p><p>Best regards,<br>Mentor Program Team</p>`,
+  };
 
-    const existEmail = await mentorModel.findOne({ email });
-    if (existEmail)
-      return res
-        .status(400)
-        .send({ error: "Email already in use. Please use a unique email." });
-
-    const existingMentorByPhone = await mentorModel.findOne({ phone });
-    if (existingMentorByPhone)
-      return res.status(400).send({
-        error: "Phone number already in use. Please use a unique phone number.",
-      });
-
-    if (!specialCharRegex.test(password)) {
-      return res.status(400).send({
-        error: "Password should contain at least one special character",
-      });
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log('Error sending registration email:', error);
+    } else {
+      console.log('Registration email sent:', info.response);
     }
-    if (password.length < 6)
-      return res
-        .status(400)
-        .send({ error: "Password should be at least 6 characters" });
+  });
+};
 
-    const hashPassword = await bcrypt.hash(password, 10);
+// Send OTP Email
+const sendOTPEmail = (mentorEmail, otp) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: mentorEmail,
+    subject: 'Your OTP for Mentor Registration',
+    text: `Your OTP is: ${otp}. It will expire in 5 minutes.`,
+    html: `<p>Your OTP is: <strong>${otp}</strong>. It will expire in 15 minutes.</p>`,
+  };
 
-    const user = new mentorModel({
-      email,
-      password: hashPassword,
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log('Error sending OTP email:', error);
+    } else {
+      console.log('OTP email sent:', info.response);
+    }
+  });
+};
+
+// Register Mentor
+export const registerMentor = async (req, res) => {
+  try {
+    const { name, email, phone, password } = req.body;
+
+    // Check if the mentor already exists
+    const existingMentor = await mentorModel.findOne({ email });
+    if (existingMentor) {
+      return res.status(400).json({ message: 'Mentor already exists with this email.' });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
+
+    // Generate OTP and expiration time
+    const otp = generateOTP();
+    const otpExpiration = new Date(Date.now() + 15 * 60 * 1000); // OTP expires in 5 minutes
+
+    // Create a new mentor
+    const newMentor = new mentorModel({
       name,
+      email,
       phone,
+      password: hashedPassword, // Save hashed password
+      otp,
+      otpExpiration,
     });
 
-    await user.save();
+    // Save mentor to the database
+    await newMentor.save();
 
-    return res
-      .status(201)
-      .send({ error: false, msg: "Request sended successfully" });
+    // Send registration email
+    sendRegistrationEmail(email, name);
+
+    // Send OTP email
+    sendOTPEmail(email, otp);
+
+    res.status(201).json({ message: 'Mentor registered successfully. OTP sent to your email.' });
   } catch (error) {
-    console.error(error);
-    res.status(500).send({ error: error.message || "Internal Server Error" });
+    console.error('Error registering mentor:', error);
+    res.status(500).json({ message: 'Server error. Please try again later.' });
   }
-}
+};
+
+export const validateOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+   
+    const mentor = await mentorModel.findOne({ email });
+    if (!mentor) {
+      return res.status(404).json({ message: 'Mentor not found.' });
+    }
+
+   
+    if (new Date() > mentor.otpExpiration) {
+      return res.status(400).json({ message: 'OTP has expired.' });
+    }
+
+    if (mentor.otp !== otp) {
+      return res.status(400).json({ message: 'Invalid OTP.' });
+    }
+
+   
+    mentor.otp = null;
+    mentor.otpExpiration = null;
+    await mentor.save();
+
+    res.status(200).json({ message: 'OTP validated successfully.' });
+  } catch (error) {
+    console.error('Error validating OTP:', error);
+    res.status(500).json({ message: 'Server error. Please try again later.' });
+  }
+};
+
+
 
 export async function loginMentor(req, res) {
   try {

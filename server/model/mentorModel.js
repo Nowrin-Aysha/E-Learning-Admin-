@@ -24,21 +24,29 @@ const mentorSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  status:{
-    type:String,
-    default:"3",
+  status: {
+    type: String,
+    default: "3",
   },
   isMentor: {
     type: Boolean,
     default: true,
   },
-  isBlocked:{
+  isBlocked: {
     type: Boolean,
     default: false,
   },
   joinedDate: {
     type: Date,
     default: Date.now,
+  },
+  otp: {
+    type: String,
+    default: null,
+  },
+  otpExpiration: {
+    type: Date,
+    default: null,
   },
 }, { timestamps: true });
 

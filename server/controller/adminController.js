@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import Jwt from "jsonwebtoken";
 import multer from 'multer';
+import { sendAdminCreationEmail } from "../sendEmail.js"
 
 dotenv.config();
 
@@ -109,38 +110,39 @@ export async function register(req, res) {
     }
   }
   
-  
 
+  
   export async function addAdmin(req, res) {
-    console.log("Adding new admin...");
+
   
     try {
+  
+      
       const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const phoneRegex = /^[0-9]{10}$/;
   
       const { name, email, phone, password } = req.body;
-      console.log(req.body);
-      console.log(req.file);
-      console.log(req.file?.path);
+
   
+      // Validate input fields
       if (!email) return res.status(400).send({ error: "Please enter email" });
       if (!emailRegex.test(email))
         return res.status(400).send({ error: "Please enter a valid email" });
       if (!name) return res.status(400).send({ error: "Please enter name" });
-      if (!phone)
-        return res.status(400).send({ error: "Please enter phone number" });
+      if (!phone) return res.status(400).send({ error: "Please enter phone number" });
       if (!phoneRegex.test(phone))
         return res.status(400).send({ error: "Phone number must be 10 digits" });
-      if (!password)
-        return res.status(400).send({ error: "Password is required" });
+      if (!password) return res.status(400).send({ error: "Password is required" });
   
+      // Check for existing admin
       const existingAdmin = await adminModel.findOne({ email });
       if (existingAdmin)
         return res
           .status(400)
           .send({ error: "Email already in use. Please use a unique email." });
   
+      // Password validation
       if (!specialCharRegex.test(password)) {
         return res
           .status(400)
@@ -149,13 +151,15 @@ export async function register(req, res) {
           });
       }
       if (password.length < 6)
-        return res
-          .status(400)
-          .send({ error: "Password should be at least 6 characters" });
+        return res.status(400).send({ error: "Password should be at least 6 characters" });
   
+      // Hash the password
       const hashedPassword = await bcrypt.hash(password, 10);
+  
+      // Handling file upload (if provided)
       const filename = req.file?.path || "";
   
+      // Create a new admin document
       const newAdmin = new adminModel({
         name,
         email,
@@ -165,16 +169,37 @@ export async function register(req, res) {
         joinedDate: new Date(),
       });
   
+      // Save the new admin
       await newAdmin.save();
+  
+      // Send email with login credentials
+      try {
+      console.log(newAdmin,'gdsiluafkjheor8iufkyh');
+      
+
+
+        
+        // Send the email to the new admin with their login credentials
+        await sendAdminCreationEmail(newAdmin);
+      } catch (emailError) {
+        console.error("Error sending email:", emailError);
+        return res.status(500).send({ error: "Admin registered, but email failed to send." });
+      }
   
       return res
         .status(200)
-        .send({ error: false, msg: "Admin registered successfully" });
+        .send({ error: false, msg: "Admin registered successfully and email sent with login credentials." });
     } catch (error) {
       console.error("Error occurred during admin registration:", error);
       res.status(500).send({ error: error.message || "Internal Server Error" });
     }
   }
+  
+  // Helper function to generate a random password if one isn't provided
+  const generateRandomPassword = () => {
+    return Math.random().toString(36).slice(-8);  // Example: Generate an 8-character password
+  };
+  
   
   export async function getAdmins(req, res) {
     try {

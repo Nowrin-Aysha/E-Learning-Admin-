@@ -7,6 +7,7 @@ const mentorRouter = Router();
 
 
 mentorRouter.route("/registerMentor").post(MentorController.registerMentor);
+mentorRouter.route("/validateOTP").post(MentorController.validateOTP)
 mentorRouter.route("/loginMentor").post(MentorController.loginMentor);
 mentorRouter.route("/addMentor").post(upload.single("photo"), MentorController.addMentor);
 mentorRouter.route("/getMentors").get(Auth, MentorController.getMentors);

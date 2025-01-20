@@ -17,8 +17,7 @@ import CourseCurriculum from "./components/courses/course-curriculum";
 import CourseLanding from "./components/courses/course-landing";
 import CourseSettings from "./components/courses/course-settings";
 import AddNewCoursePage from "./components/courses/add-new-course";
-
-
+import OtpValidation from "./components/signin/otpValidation"  
 
 function App() {
   const router = createBrowserRouter(
@@ -90,6 +89,10 @@ function App() {
       {
         path: "/admins",
         element: <AdminsPage />,
+      },
+      {
+        path: "/validate-otp", 
+        element: <OtpValidation />,
       },
       {
         path: "*",
