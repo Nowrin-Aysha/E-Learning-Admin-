@@ -57,13 +57,13 @@ const SidebarNavbar = ({ superAdmin, mentor, user, count, showProfileDropdown })
               </div>
             </Link>
           </li> */}
-          <li className="nav-item">
+          {/* <li className="nav-item">
             <Link className="nav-link text-white" to="/students">
               <div className="sidebar-option">
                 <i className="bi bi-person-fill"></i> Student Management
               </div>
             </Link>
-          </li>
+          </li> */}
 
           {superAdmin && (
             <li className="nav-item">

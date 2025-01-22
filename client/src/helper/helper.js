@@ -1,9 +1,9 @@
 import axios from "axios";
 
-// Base URL Configuration
+
 axios.defaults.baseURL = "http://localhost:5001";
 
-// Utility function to handle errors
+
 function handleError(error) {
   console.error("Error:", error);
   if (error.response) {

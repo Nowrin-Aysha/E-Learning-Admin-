@@ -125,7 +125,6 @@ export async function register(req, res) {
       const { name, email, phone, password } = req.body;
 
   
-      // Validate input fields
       if (!email) return res.status(400).send({ error: "Please enter email" });
       if (!emailRegex.test(email))
         return res.status(400).send({ error: "Please enter a valid email" });
@@ -135,14 +134,13 @@ export async function register(req, res) {
         return res.status(400).send({ error: "Phone number must be 10 digits" });
       if (!password) return res.status(400).send({ error: "Password is required" });
   
-      // Check for existing admin
+    
       const existingAdmin = await adminModel.findOne({ email });
       if (existingAdmin)
         return res
           .status(400)
           .send({ error: "Email already in use. Please use a unique email." });
   
-      // Password validation
       if (!specialCharRegex.test(password)) {
         return res
           .status(400)
@@ -153,13 +151,12 @@ export async function register(req, res) {
       if (password.length < 6)
         return res.status(400).send({ error: "Password should be at least 6 characters" });
   
-      // Hash the password
+  
       const hashedPassword = await bcrypt.hash(password, 10);
   
-      // Handling file upload (if provided)
       const filename = req.file?.path || "";
   
-      // Create a new admin document
+
       const newAdmin = new adminModel({
         name,
         email,
@@ -169,18 +166,17 @@ export async function register(req, res) {
         joinedDate: new Date(),
       });
   
-      // Save the new admin
+ 
       await newAdmin.save();
   
-      // Send email with login credentials
       try {
       console.log(newAdmin,'gdsiluafkjheor8iufkyh');
       
 
 
         
-        // Send the email to the new admin with their login credentials
-        await sendAdminCreationEmail(newAdmin);
+      
+        await sendAdminCreationEmail(newAdmin,password);
       } catch (emailError) {
         console.error("Error sending email:", emailError);
         return res.status(500).send({ error: "Admin registered, but email failed to send." });
@@ -195,10 +191,7 @@ export async function register(req, res) {
     }
   }
   
-  // Helper function to generate a random password if one isn't provided
-  const generateRandomPassword = () => {
-    return Math.random().toString(36).slice(-8);  // Example: Generate an 8-character password
-  };
+ 
   
   
   export async function getAdmins(req, res) {

@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 
 // const rubber = () => {
 //   return {
@@ -18,10 +17,9 @@ import { motion } from 'framer-motion';
 const FormElements = ({ motionText, buttonText, handleSubmit }) => {
   const [formValues, setFormValues] = useState({});
 
-  
   const handleInputChange = (label, value) => {
     console.log(formValues);
-    
+
     setFormValues((prevValues) => ({ ...prevValues, [label]: value }));
   };
 
@@ -141,7 +139,10 @@ const FormElements = ({ motionText, buttonText, handleSubmit }) => {
         `}
       </style>
 
-      <form className="form-container" onSubmit={(e) => handleSubmit(e, formValues)}>
+      <form
+        className="form-container"
+        onSubmit={(e) => handleSubmit(e, formValues)}
+      >
         <motion.h2
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -155,17 +156,19 @@ const FormElements = ({ motionText, buttonText, handleSubmit }) => {
         {motionText.map((label, index) => (
           <div key={index} className="input-group">
             <motion.label
-              whileHover={{ scale: 1.1, color: '#3498db' }}
+              whileHover={{ scale: 1.1, color: "#3498db" }}
               transition={{ duration: 0.3 }}
             >
               {label}
             </motion.label>
             <motion.input
-              type={label.toLowerCase().includes('password') ? 'password' : 'text'}
+              type={
+                label.toLowerCase().includes("password") ? "password" : "text"
+              }
               whileHover={{
                 scale: 1.05,
-                borderColor: '#3498db',
-                boxShadow: '0 0 10px rgba(52, 152, 219, 0.4)',
+                borderColor: "#3498db",
+                boxShadow: "0 0 10px rgba(52, 152, 219, 0.4)",
               }}
               transition={{ duration: 0.3 }}
               onChange={(e) => handleInputChange(label, e.target.value)}
