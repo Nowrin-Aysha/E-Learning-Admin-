@@ -608,20 +608,20 @@ const MentorsPage = () => {
                       }}
                     >
                       {mentor.isBlocked ? (
-                        <FaUnlockAlt
-                          style={{
-                            cursor: "pointer",
-                            fontSize: "20px",
-                            color: "green",
-                          }}
-                          onClick={() => handleUnblockMentor(mentor._id)}
-                        />
-                      ) : (
                         <FaBan
                           style={{
                             cursor: "pointer",
                             fontSize: "20px",
                             color: "red",
+                          }}
+                          onClick={() => handleUnblockMentor(mentor._id)}
+                        />
+                      ) : (
+                        <FaUnlockAlt
+                          style={{
+                            cursor: "pointer",
+                            fontSize: "20px",
+                            color: "green",
                           }}
                           onClick={() => handleBlockMentor(mentor._id)}
                         />

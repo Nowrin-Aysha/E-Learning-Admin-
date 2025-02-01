@@ -433,20 +433,20 @@ const AdminsPage = () => {
                         }}
                       >
                         {admin.isBlocked ? (
-                          <FaUnlockAlt
-                            style={{
-                              cursor: "pointer",
-                              fontSize: "20px",
-                              color: "green",
-                            }}
-                            onClick={() => handleUnblockAdmin(admin._id)}
-                          />
-                        ) : (
                           <FaBan
                             style={{
                               cursor: "pointer",
                               fontSize: "20px",
                               color: "red",
+                            }}
+                            onClick={() => handleUnblockAdmin(admin._id)}
+                          />
+                        ) : (
+                          <FaBUnlockAlt
+                            style={{
+                              cursor: "pointer",
+                              fontSize: "20px",
+                              color: "green",
                             }}
                             onClick={() => handleBlockAdmin(admin._id)}
                           />

@@ -28,7 +28,7 @@ export async function sendAdminCreationEmail(admin,password) {
       Email: ${admin.email}
       Password: ${password}
 
-      Please make sure to change your password after logging in for security purposes.
+      
 
       If you have any questions or need assistance, feel free to contact support.
 
